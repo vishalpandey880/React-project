@@ -2,9 +2,10 @@ import {
   API_BASE,
   BOOK_SEARCH_FIELDS,
   DEFAULT_SEARCH_TERM,
-  FALLBACK_COVER,
+  createBookCover,
   fallbackBooks,
   genreKeywords,
+  getOpenLibraryCover,
 } from '../constants/books';
 
 const getGenre = (subjects = [], title = '') => {
@@ -32,20 +33,22 @@ const normalizeBook = (doc, index) => {
   const condition = doc.first_publish_year && doc.first_publish_year < 2018 ? 'Used' : 'New';
   const rating = getRating(doc, index);
   const reviews = doc.ratings_count || Math.max(18, (doc.edition_count || 1) * 9 + index * 3);
+  const title = doc.title || 'Untitled Book';
+  const author = doc.author_name?.[0] || 'Unknown Author';
+  const genre = getGenre(doc.subject, title);
 
   return {
-    id: doc.key || `${doc.title}-${index}`,
-    title: doc.title || 'Untitled Book',
-    author: doc.author_name?.[0] || 'Unknown Author',
-    genre: getGenre(doc.subject, doc.title),
+    id: doc.key || `${title}-${index}`,
+    title,
+    author,
+    genre,
     condition,
     price,
     originalPrice: condition === 'Used' ? Math.round(price * 1.45) : price,
     rating,
     reviews,
-    cover: doc.cover_i
-      ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`
-      : FALLBACK_COVER,
+    cover: getOpenLibraryCover(doc.cover_i),
+    fallbackCover: createBookCover(title, author, genre),
     tags: [
       doc.first_publish_year ? `${doc.first_publish_year}` : 'Edition',
       `${doc.edition_count || 1} editions`,

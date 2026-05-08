@@ -1,11 +1,23 @@
 import { Heart, ShoppingBag, Star } from 'lucide-react';
+import { FALLBACK_COVER } from '../constants/books';
 import { formatINR } from '../utils/currency';
 
 export function BookCard({ book, wishlisted, onAddToCart, onToggleWishlist }) {
+  const fallbackCover = book.fallbackCover || FALLBACK_COVER;
+
+  const handleCoverError = (event) => {
+    event.currentTarget.onerror = null;
+    event.currentTarget.src = fallbackCover;
+  };
+
   return (
     <article className="book-card">
       <div className="cover-wrap">
-        <img src={book.cover} alt="" />
+        <img
+          src={book.cover || fallbackCover}
+          alt={`${book.title} book cover`}
+          onError={handleCoverError}
+        />
         <button
           className={`icon-button ${wishlisted ? 'active' : ''}`}
           onClick={() => onToggleWishlist(book)}

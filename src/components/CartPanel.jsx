@@ -1,7 +1,13 @@
 import { Check, Minus, Plus, Trash2 } from 'lucide-react';
+import { FALLBACK_COVER } from '../constants/books';
 import { formatINR } from '../utils/currency';
 
 export function CartPanel({ cart, pricing, onUpdateQuantity, onPlaceOrder }) {
+  const handleCoverError = (event, fallbackCover) => {
+    event.currentTarget.onerror = null;
+    event.currentTarget.src = fallbackCover;
+  };
+
   return (
     <section className="panel-block">
       <div className="panel-title">
@@ -12,7 +18,11 @@ export function CartPanel({ cart, pricing, onUpdateQuantity, onPlaceOrder }) {
         {cart.length === 0 && <p className="empty">Your cart is ready for books.</p>}
         {cart.map((item) => (
           <div className="cart-item" key={item.id}>
-            <img src={item.book.cover} alt="" />
+            <img
+              src={item.book.cover || item.book.fallbackCover || FALLBACK_COVER}
+              alt={`${item.book.title} book cover`}
+              onError={(event) => handleCoverError(event, item.book.fallbackCover || FALLBACK_COVER)}
+            />
             <div>
               <strong>{item.book.title}</strong>
               <span>{formatINR.format(item.book.price)}</span>
