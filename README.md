@@ -458,7 +458,7 @@ This project is currently under development / completed as a college mini projec
 | --- | --- |
 | Name | Vishal Pandey |
 | Role | B.Tech CSE |
-| GitHub | YOUR_GITHUB_LINK |
+| GitHub | https://github.com/vishalpandey880|
 | LinkedIn | https://www.linkedin.com/in/vishal-pandey-5b897a378/ |
 
 ## License
