@@ -391,7 +391,7 @@ Add project screenshots inside a `screenshots/` folder using the file names belo
 
 ### Compare Page
 
-![Compare Page](React-project/screenshots/compare .png)
+![Compare Page](./screenshots/compares.png)
 
 ### Orders Page
 
