@@ -10,6 +10,13 @@ const COUPONS = {
   FREESHIP: { type: 'shipping', value: 0, label: 'Free delivery coupon' },
 };
 const ORDER_STEPS = ['Confirmed', 'Packed', 'Shipped', 'Delivered'];
+const CONDITION_POOL = ['New', 'Like New', 'Good', 'Fair', 'Old but usable'];
+const SELLERS = [
+  { name: 'Aarav Sharma', college: 'North Campus College', verified: true },
+  { name: 'Maya Iyer', college: 'City Commerce Institute', verified: true },
+  { name: 'Kabir Mehta', college: 'Greenfield University', verified: true },
+  { name: 'Nisha Rao', college: 'Metro Engineering College', verified: false },
+];
 
 function readStorage(key, fallback) {
   try {
@@ -25,11 +32,29 @@ function writeStorage(key, value) {
 }
 
 function withDefaults(book, index = 0) {
+  const stock = Math.max(0, 8 - (index % 5) * 2);
+  const condition =
+    book.condition === 'Used' ? CONDITION_POOL[(index % (CONDITION_POOL.length - 1)) + 1] : book.condition || CONDITION_POOL[index % CONDITION_POOL.length];
   return {
-    stock: Math.max(0, 8 - (index % 5) * 2),
+    stock,
     sold: 16 + index * 5,
     createdAt: Date.now() - index * 86400000,
+    condition,
+    seller: book.seller || SELLERS[index % SELLERS.length],
+    conditionDetails:
+      book.conditionDetails ||
+      (condition === 'New'
+        ? 'Fresh copy with no markings.'
+        : condition === 'Like New'
+          ? 'Barely used, clean pages and cover.'
+          : condition === 'Good'
+            ? 'Light highlights or minor edge wear.'
+            : condition === 'Fair'
+              ? 'Usable copy with visible notes or worn cover.'
+              : 'Older edition, readable and budget friendly.'),
     ...book,
+    condition,
+    stock,
   };
 }
 
@@ -65,6 +90,7 @@ export function StoreProvider({ children }) {
   const [currentUser, setCurrentUserState] = useState(() => readStorage('digitalBookstoreCurrentUser', null));
   const [theme, setThemeState] = useState(() => readStorage('digitalBookstoreTheme', 'light'));
   const [customBooks, setCustomBooksState] = useState(() => readStorage('digitalBookstoreCustomBooks', []));
+  const [savedApiBooks, setSavedApiBooksState] = useState(() => readStorage('digitalBookstoreApiBooks', []));
   const [deletedBookIds, setDeletedBookIdsState] = useState(() => readStorage('digitalBookstoreDeletedBooks', []));
   const [reviewsByBook, setReviewsByBookState] = useState(() => readStorage('digitalBookstoreReviews', {}));
   const [stockByBook, setStockByBookState] = useState(() => readStorage('digitalBookstoreStock', {}));
@@ -94,6 +120,7 @@ export function StoreProvider({ children }) {
   const setOrders = (value) => persist(setOrdersState, 'digitalBookstoreOrders', value);
   const setUsers = (value) => persist(setUsersState, 'digitalBookstoreUsers', value);
   const setCustomBooks = (value) => persist(setCustomBooksState, 'digitalBookstoreCustomBooks', value);
+  const setSavedApiBooks = (value) => persist(setSavedApiBooksState, 'digitalBookstoreApiBooks', value);
   const setDeletedBookIds = (value) => persist(setDeletedBookIdsState, 'digitalBookstoreDeletedBooks', value);
   const setReviewsByBook = (value) => persist(setReviewsByBookState, 'digitalBookstoreReviews', value);
   const setStockByBook = (value) => persist(setStockByBookState, 'digitalBookstoreStock', value);
@@ -117,7 +144,7 @@ export function StoreProvider({ children }) {
   );
 
   const books = useMemo(() => {
-    return [...baseBooks, ...customBooks].map((book) => {
+    return [...baseBooks, ...customBooks, ...savedApiBooks].map((book) => {
       const extraReviews = reviewsByBook[book.id] || [];
       const allReviews = [...(book.reviews || []), ...extraReviews];
       const average =
@@ -131,9 +158,17 @@ export function StoreProvider({ children }) {
         stock: stockByBook[book.id] ?? book.stock ?? 0,
       };
     });
-  }, [baseBooks, customBooks, reviewsByBook, stockByBook]);
+  }, [baseBooks, customBooks, savedApiBooks, reviewsByBook, stockByBook]);
 
   const getBook = (id) => books.find((book) => book.id === id);
+
+  const saveApiBook = (book) => {
+    if (book?.source !== 'Open Library' && book?.source !== 'Google Books fallback') return;
+    setSavedApiBooks((items) => {
+      if (items.some((item) => item.id === book.id)) return items;
+      return [book, ...items].slice(0, 80);
+    });
+  };
 
   const setTheme = (nextTheme) => {
     setThemeState(nextTheme);
@@ -191,6 +226,7 @@ export function StoreProvider({ children }) {
   };
 
   const addToCart = (book) => {
+    saveApiBook(book);
     if ((book.stock ?? 0) <= 0) {
       showToast('This book is out of stock');
       return;
@@ -234,6 +270,7 @@ export function StoreProvider({ children }) {
   };
 
   const toggleWishlist = (book) => {
+    saveApiBook(book);
     const exists = wishlist.some((item) => item.id === book.id);
     setWishlist((items) =>
       // A book can appear only once in the wishlist.
@@ -292,7 +329,7 @@ export function StoreProvider({ children }) {
     return { subtotal, discount, delivery, total: subtotal - discount + delivery, couponDiscount, studentDiscount };
   }, [cart, coupon]);
 
-  const placeOrder = () => {
+  const placeOrder = (checkoutDetails = null) => {
     if (!cart.length) return null;
     const order = {
       id: `DB-${Date.now().toString().slice(-6)}`,
@@ -304,6 +341,7 @@ export function StoreProvider({ children }) {
       books: cart,
       total: pricing.total,
       status: 'Confirmed',
+      checkoutDetails,
     };
     setOrders((items) => [order, ...items]);
     setStockByBook((stock) => {
@@ -322,6 +360,7 @@ export function StoreProvider({ children }) {
   };
 
   const markRecentlyViewed = (book) => {
+    saveApiBook(book);
     setRecentlyViewed((items) => [book.id, ...items.filter((id) => id !== book.id)].slice(0, 6));
   };
 
@@ -353,6 +392,11 @@ export function StoreProvider({ children }) {
         reviews: [],
         createdAt: Date.now(),
         sellerEmail: currentUser?.email || '',
+        seller: {
+          name: currentUser?.name || book.contact || 'Student Seller',
+          college: currentUser?.college || 'Student marketplace listing',
+          verified: Boolean(currentUser),
+        },
         listingStatus: 'Listed',
       },
       0,
@@ -378,6 +422,7 @@ export function StoreProvider({ children }) {
   };
 
   const toggleCompare = (book) => {
+    saveApiBook(book);
     setCompareIds((items) => {
       if (items.includes(book.id)) return items.filter((id) => id !== book.id);
       if (items.length >= 3) {
@@ -398,6 +443,7 @@ export function StoreProvider({ children }) {
     currentUser,
     theme,
     customBooks,
+    savedApiBooks,
     reviewsByBook,
     requests,
     savedForLater,
@@ -412,6 +458,7 @@ export function StoreProvider({ children }) {
     orderSteps: ORDER_STEPS,
     cartCount: cart.reduce((sum, item) => sum + item.quantity, 0),
     getBook,
+    saveApiBook,
     setTheme,
     login,
     signup,

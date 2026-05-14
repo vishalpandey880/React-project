@@ -7,8 +7,24 @@ import { PriceSummary } from '../components/PriceSummary';
 import { useStore } from '../context/StoreContext';
 
 export function Checkout() {
-  const { cart, pricing, placeOrder } = useStore();
+  const { cart, pricing, placeOrder, currentUser } = useStore();
   const [ordered, setOrdered] = useState(null);
+  const [checkoutForm, setCheckoutForm] = useState({
+    fullName: currentUser?.name || '',
+    phone: currentUser?.phone || '',
+    college: currentUser?.college || '',
+    address: currentUser?.location || '',
+    paymentMethod: 'Cash on Delivery',
+  });
+
+  const updateField = (field, value) => {
+    setCheckoutForm((previous) => ({ ...previous, [field]: value }));
+  };
+
+  const submitOrder = (event) => {
+    event.preventDefault();
+    setOrdered(placeOrder(checkoutForm));
+  };
 
   if (ordered) {
     return (
@@ -31,9 +47,25 @@ export function Checkout() {
       </div>
       {cart.length ? (
         <div className="checkout-layout">
-          <div className="stack">{cart.map((item) => <CartItem key={item.id} item={item} />)}</div>
+          <div className="stack">
+            <form className="checkout-form-card" id="checkout-form" onSubmit={submitOrder}>
+              <div>
+                <span className="eyebrow">Delivery details</span>
+                <h2>Where should we send your books?</h2>
+              </div>
+              <div className="form-grid">
+                <label>Full name<input required value={checkoutForm.fullName} onChange={(e) => updateField('fullName', e.target.value)} /></label>
+                <label>Phone<input required value={checkoutForm.phone} onChange={(e) => updateField('phone', e.target.value)} /></label>
+                <label>College<input required value={checkoutForm.college} onChange={(e) => updateField('college', e.target.value)} /></label>
+                <label>Payment method<select value={checkoutForm.paymentMethod} onChange={(e) => updateField('paymentMethod', e.target.value)}><option>Cash on Delivery</option><option>UPI Demo</option></select></label>
+              </div>
+              <label>Campus address<textarea required rows="3" value={checkoutForm.address} onChange={(e) => updateField('address', e.target.value)} /></label>
+              <p className="muted">Demo checkout only. These details are saved with the order in localStorage.</p>
+            </form>
+            {cart.map((item) => <CartItem key={item.id} item={item} />)}
+          </div>
           <PriceSummary pricing={pricing}>
-            <button className="primary full" onClick={() => setOrdered(placeOrder())}>Place order</button>
+            <button className="primary full" type="submit" form="checkout-form">Place order</button>
           </PriceSummary>
         </div>
       ) : (

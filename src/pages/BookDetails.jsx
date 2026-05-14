@@ -1,4 +1,4 @@
-import { Heart, Share2, ShoppingCart } from 'lucide-react';
+import { Heart, Share2, ShieldCheck, ShoppingCart } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { BookCard } from '../components/BookCard';
@@ -49,6 +49,7 @@ export function BookDetails() {
   const related = books.filter((item) => item.genre === book.genre && item.id !== book.id).slice(0, 4);
   const recommendations = books.filter((item) => item.id !== book.id).sort((a, b) => b.rating - a.rating).slice(0, 4);
   const outOfStock = book.stock <= 0;
+  const availability = outOfStock ? 'Out of Stock' : book.stock <= 3 ? 'Only few left' : `In Stock: ${book.stock} copies`;
 
   return (
     <section className="page-shell">
@@ -63,8 +64,22 @@ export function BookDetails() {
           <Stars rating={book.rating} />
           <p>{book.description}</p>
           <div className="detail-badges">
-            <span className={outOfStock ? 'danger-text' : ''}>{outOfStock ? 'Out of Stock' : `In Stock: ${book.stock} copies`}</span>
+            <span className={outOfStock ? 'danger-text' : ''}>{availability}</span>
             <span>Estimated delivery: {deliveryDate}</span>
+          </div>
+          <div className="seller-card details-seller-card">
+            <div>
+              <span className="muted">Student seller</span>
+              <strong>{book.seller?.name || 'Digital Bookstore'}</strong>
+              <p>{book.seller?.college || 'Verified student marketplace listing'}</p>
+              <p>{book.conditionDetails}</p>
+            </div>
+            {book.seller?.verified && (
+              <span className="verified-badge">
+                <ShieldCheck size={14} />
+                Verified student
+              </span>
+            )}
           </div>
           <div className="details-price">
             <strong>{formatCurrency.format(book.price)}</strong>

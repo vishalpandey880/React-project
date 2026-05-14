@@ -4,11 +4,13 @@ export function FilterSidebar({
   genre,
   author,
   condition,
+  availability,
   maxPrice,
   minRating,
   onGenreChange,
   onAuthorChange,
   onConditionChange,
+  onAvailabilityChange,
   onMaxPriceChange,
   onMinRatingChange,
   onReset,
@@ -38,7 +40,19 @@ export function FilterSidebar({
         <select value={condition} onChange={(event) => onConditionChange(event.target.value)}>
           <option>All</option>
           <option>New</option>
-          <option>Used</option>
+          <option>Like New</option>
+          <option>Good</option>
+          <option>Fair</option>
+          <option>Old but usable</option>
+        </select>
+      </label>
+      <label>
+        Availability
+        <select value={availability} onChange={(event) => onAvailabilityChange(event.target.value)}>
+          <option>All</option>
+          <option>In Stock</option>
+          <option>Only few left</option>
+          <option>Out of Stock</option>
         </select>
       </label>
       <label>

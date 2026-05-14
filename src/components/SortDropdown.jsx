@@ -8,6 +8,7 @@ export function SortDropdown({ value, onChange }) {
         <option value="price-high">Price: High to Low</option>
         <option value="rating">Rating: High to Low</option>
         <option value="rating-low">Rating: Low to High</option>
+        <option value="newest">Newest Publish Year</option>
       </select>
     </label>
   );
