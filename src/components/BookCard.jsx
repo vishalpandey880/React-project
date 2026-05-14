@@ -1,58 +1,51 @@
-import { Heart, ShoppingBag, Star } from 'lucide-react';
-import { FALLBACK_COVER } from '../constants/books';
-import { formatINR } from '../utils/currency';
+import { GitCompare, Heart, ShoppingBag } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useStore } from '../context/StoreContext';
+import { formatCurrency } from '../utils/formatCurrency';
+import { Stars } from './Stars';
 
-export function BookCard({ book, wishlisted, onAddToCart, onToggleWishlist }) {
-  const fallbackCover = book.fallbackCover || FALLBACK_COVER;
-
-  const handleCoverError = (event) => {
-    event.currentTarget.onerror = null;
-    event.currentTarget.src = fallbackCover;
-  };
+export function BookCard({ book }) {
+  const { addToCart, toggleWishlist, isWishlisted, toggleCompare, compareIds } = useStore();
+  const wished = isWishlisted(book.id);
+  const outOfStock = book.stock <= 0;
 
   return (
     <article className="book-card">
-      <div className="cover-wrap">
-        <img
-          src={book.cover || fallbackCover}
-          alt={`${book.title} book cover`}
-          onError={handleCoverError}
-        />
-        <button
-          className={`icon-button ${wishlisted ? 'active' : ''}`}
-          onClick={() => onToggleWishlist(book)}
-          aria-label={`Toggle wishlist for ${book.title}`}
-          title="Add to wishlist"
-        >
-          <Heart size={18} fill="currentColor" />
-        </button>
-      </div>
-      <div className="book-content">
-        <div className="book-meta">
+      <Link to={`/books/${book.id}`} className="book-cover">
+        <img src={book.image} alt={`${book.title} cover`} />
+        <span>{book.condition}</span>
+      </Link>
+      <div className={`stock-pill ${outOfStock ? 'out' : ''}`}>{outOfStock ? 'Out of Stock' : `${book.stock} in stock`}</div>
+      <button
+        className={`wishlist-button ${wished ? 'active' : ''}`}
+        onClick={() => toggleWishlist(book)}
+        aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
+      >
+        <Heart size={18} fill="currentColor" />
+      </button>
+      <div className="book-body">
+        <div className="book-kicker">
           <span>{book.genre}</span>
-          <span>{book.condition}</span>
+          <Stars rating={book.rating} compact />
         </div>
-        <h3>{book.title}</h3>
-        <p className="author">by {book.author}</p>
-        <div className="rating">
-          <Star size={17} fill="currentColor" />
-          <strong>{book.rating}</strong>
-          <span>({book.reviews})</span>
+        <Link to={`/books/${book.id}`} className="book-title">{book.title}</Link>
+        <p className="muted">by {book.author}</p>
+        <p>{book.description}</p>
+        <div className="card-actions-row">
+          <Link className="details-link" to={`/books/${book.id}`}>View Details</Link>
+          <button className={`compare-chip ${compareIds.includes(book.id) ? 'active' : ''}`} onClick={() => toggleCompare(book)}>
+            <GitCompare size={15} />
+            Compare
+          </button>
         </div>
-        <p className="review">"{book.reviewText}"</p>
-        <div className="tag-row">
-          {book.tags.map((tag) => (
-            <span key={tag}>{tag}</span>
-          ))}
-        </div>
-        <div className="buy-row">
+        <div className="price-row">
           <div>
-            <strong>{formatINR.format(book.price)}</strong>
-            {book.originalPrice !== book.price && <span>{formatINR.format(book.originalPrice)}</span>}
+            <strong>{formatCurrency.format(book.price)}</strong>
+            <span>{formatCurrency.format(book.originalPrice)}</span>
           </div>
-          <button onClick={() => onAddToCart(book)}>
-            <ShoppingBag size={17} />
-            Add
+          <button className="primary small" onClick={() => addToCart(book)} disabled={outOfStock}>
+            <ShoppingBag size={16} />
+            {outOfStock ? 'Sold out' : 'Add'}
           </button>
         </div>
       </div>

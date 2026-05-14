@@ -1,4 +1,7 @@
 {
+  "name": "digital-bookstore",
+  "version": "1.0.0",
+  "private": true,
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
@@ -6,10 +9,10 @@
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
-    "vite": "latest",
+    "lucide-react": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "lucide-react": "latest"
-  },
-  "devDependencies": {}
+    "react-router-dom": "^7.15.0",
+    "vite": "latest"
+  }
 }
