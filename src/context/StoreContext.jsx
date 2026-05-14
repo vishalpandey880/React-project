@@ -44,6 +44,7 @@ function createProfile(user = {}) {
     avatar:
       user.avatar ||
       `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=7c3aed&color=fff&size=160`,
+    bio: user.bio || '',
     joinedDate:
       user.joinedDate ||
       new Date().toLocaleDateString('en-IN', {

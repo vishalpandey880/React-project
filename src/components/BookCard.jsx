@@ -2,6 +2,7 @@ import { GitCompare, Heart, ShoppingBag } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { formatCurrency } from '../utils/formatCurrency';
+import { SpotlightCard } from './reactbits/SpotlightCard';
 import { Stars } from './Stars';
 
 export function BookCard({ book }) {
@@ -10,7 +11,7 @@ export function BookCard({ book }) {
   const outOfStock = book.stock <= 0;
 
   return (
-    <article className="book-card">
+    <SpotlightCard as="article" className="book-card">
       <Link to={`/books/${book.id}`} className="book-cover">
         <img src={book.image} alt={`${book.title} cover`} />
         <span>{book.condition}</span>
@@ -49,6 +50,6 @@ export function BookCard({ book }) {
           </button>
         </div>
       </div>
-    </article>
+    </SpotlightCard>
   );
 }

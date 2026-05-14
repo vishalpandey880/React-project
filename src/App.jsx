@@ -1,4 +1,5 @@
 import { Route, Routes } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { Footer } from './components/Footer';
 import { Navbar } from './components/Navbar';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -21,10 +22,12 @@ import { Wishlist } from './pages/Wishlist';
 import './styles.css';
 
 function App() {
+  const location = useLocation();
+
   return (
     <div className="app">
       <Navbar />
-      <main>
+      <main className="rb-page-transition" key={location.pathname}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/books" element={<Books />} />
